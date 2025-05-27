@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  tusd:
+    container_name: tusd-pathcloud
+    image: us-west2-docker.pkg.dev/gcp-pathology-poc1/pathcloud/tusd-go-nginx:latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.nginx
+    volumes:
+      - /mnt/d/Datasets/tusd-data:/srv/tusd-data
+    ports:
+      - '8080:8080'
+      - '8001:80'
