@@ -16,35 +16,36 @@ docker push us-west2-docker.pkg.dev/gcp-pathology-poc1/pathcloud/tusd-go
 **Create Buckets**
 `gcloud storage buckets create gs://transform-image-upload --location=us-west2`
 
+- this is original method using volume mounts, but had issues with GCS locks using fuse volume mount
+
 ```
 gcloud config set project gcp-pathology-poc1 && \
-gcloud beta run deploy upload-service-tusd --image us-west2-docker.pkg.dev/gcp-pathology-poc1/pathcloud/tusd-go \
+gcloud beta run deploy upload-service-tusd3 --image us-west2-docker.pkg.dev/gcp-pathology-poc1/pathcloud/tusd-go \
 --region=us-west2 --allow-unauthenticated --execution-environment gen2 \
 --memory 4G \
 --add-volume name=tusd-data,type=cloud-storage,bucket=transform-image-upload \
 --add-volume-mount volume=tusd-data,mount-path=/srv/tusd-data
 ```
 
-# Deploy Standard Image to GCP Cloud Run (090425)
+# Deploy Standard Image with GCS Adapter to GCP Cloud Run (090425)
+**Create Buckets**
+- create bucket if necessary
+`gcloud storage buckets create gs://transform-image-upload --location=us-west2`
 
 ## Deploy to GCP Cloud Run
-**Create Buckets**
-`gcloud storage buckets create gs://transform-image-upload --location=us-west2`
+- either Build Image and use from Artifact Registry or use tus.io image from Docker Hub (tusproject/tusd:latest)
 
 ```
 gcloud config set project gcp-pathology-poc1 && \
-gcloud beta run deploy upload-service-tusd --image tusproject/tusd:latest \
---region=us-west2 --allow-unauthenticated --execution-environment gen2 \
+gcloud beta run deploy upload-service-tusd \
+--image tusproject/tusd:latest \
+--region=us-west2 \
+--allow-unauthenticated \
+--execution-environment gen2 \
 --memory 4G \
---add-volume name=tusd-data,type=cloud-storage,bucket=transform-image-upload \
---add-volume-mount volume=tusd-data,mount-path=/data \
---args "-upload-dir=/data" \
---args "-cors-allow-origin=*" \
---args "-cors-allow-methods=POST,GET,HEAD,PATCH,OPTIONS" \
---args "-cors-allow-headers=Authorization,Content-Type,Upload-Length,Upload-Offset,Tus-Resumable,Upload-Metadata,Upload-Defer-Length,Upload-Concat"
+--args="-behind-proxy,-gcs-bucket=transform-image-upload,-gcs-object-prefix=data/" 
 
 ```
-
 ## Test Upload
 
 **Create Upload**
