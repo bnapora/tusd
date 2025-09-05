@@ -10,3 +10,4 @@ venv/
 examples/hooks/plugin/hook_handler
 .idea/
 .vscode/
+.history/
